@@ -1,3 +1,4 @@
+---
 apiVersion: apiregistration.k8s.io/v1
 kind: APIService
 metadata:
@@ -12,3 +13,40 @@ spec:
     name: forward
     port: 6666
   caBundle: MIIDCzCCAfOgAwIBAgIUKT+/4ROI7lrsqdAd6g/HXYaVtbQwDQYJKoZIhvcNAQELBQAwFTETMBEGA1UEAwwKMTcyLjE3LjAuMTAeFw0yMjExMTEwMDQ4NDVaFw0yMzExMTEwMDQ4NDVaMBUxEzARBgNVBAMMCjE3Mi4xNy4wLjEwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCawq8BO4i6EN+ioXDAH18NC8YdHvIjxTVLTBVVXEJUzFjuWNsMk8MgFH5KRoAVmy9HLxXqoYxS+6ZiVN+9MeN/ySI7hzUwuquXFpev3K8uVbA1CJuaM9qU4BHjfzHv0PNg90Uc9wMIcvw9jatrYIB+E6GYrmPwNwktw8ega62Ob0tCUbVjV1P7aVUDbzPSZn+gt/QbvakOm04EPoy5Yn4T+apoiW1pVU7jDp80m7lP2pz5z44udOk65S7r8xEytUqmu5yumYjg4nBawYf2zvTyHCJr1pT3/HkOrZkp/qKBmFVTZBoTsTkGH3l69Q73wBDNvBlSX1h3LdgFEyL9lP7jAgMBAAGjUzBRMB0GA1UdDgQWBBQ6TffL6euvqhO8HN3h0E/hlM9PWjAfBgNVHSMEGDAWgBQ6TffL6euvqhO8HN3h0E/hlM9PWjAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQCOAwdmyi3dGF70qPToab5ry1EDc8G0TKYGsu/J8M2D03udAZOp27KXUJZfpj8896t+PzCwdIBeKC6hHAP0r6lnToEVI5PFUiDQ2jCpVrwPwQgFd6e94knKZWMfxk2xYvlhxIUruVfUjFNcokjp9tElcsvI+saNPxMsn/TfX3QMinlUmDIkqrFQ9KF6U9HbAJJ+JNlBfiQmdt/Bybc3LlMWVmfL7fKMEFjGJfr+e62PoseWloklA/XQS/oexNKhSx3Xk8bas6C5F+IYRKlGwjEvc+XHNA9llYsQsKWKd+rj8VDtugcW5ph2s9rkfwciQbTfAii/b4G8V+PuwGdiiWZu
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: port-forward
+  name: port-forward
+  namespace: default
+spec:
+  containers:
+  - env:
+    - name: REMOTE_HOST
+      value: 172.17.0.1 # localhost gateway
+    - name: REMOTE_PORT
+      value: "4444"
+    - name: LOCAL_PORT
+      value: "6666"
+    image: marcnuri/port-forward
+    imagePullPolicy: Always
+    name: port-forward
+    ports:
+    - containerPort: 6666
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: forward
+  namespace: default
+spec:
+  ports:
+  - port: 6666
+    protocol: TCP
+    targetPort: 6666
+  selector:
+    run: port-forward
+  type: ClusterIP
